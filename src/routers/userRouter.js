@@ -45,6 +45,18 @@ userRouter.delete('/users/:id', async (req, res) => {
     }
 })
 
+userRouter.post('/users/login', async (req ,res) => {
+    try {
+        const user = await User.findByEmail(req.body.email, req.body.password)
+        console.log(user)
+        res.send(user)
+    }
+    catch (e) {
+        console.log(e)
+        res.status(400).send(e)
+    }
+})
+
 
 userRouter.patch('/users/:id', async (req, res) => {
     const updates = Object.keys(req.body)
