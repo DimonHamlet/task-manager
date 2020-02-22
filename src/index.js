@@ -1,7 +1,6 @@
 const express = require('express')
 const userRouter = require('./routers/userRouter')
 const taskRouter = require('./routers/taskRouter')
-const jwt = require('jsonwebtoken')
 
 const app = express()
 const port = process.env.PORT || 3000
