@@ -25,6 +25,18 @@ userRouter.post('/users', async (req, res) => {
     }
 })
 
+userRouter.post('/users/login', async (req ,res) => {
+    try {
+        const user = await User.findByEmail(req.body.email, req.body.password)
+        const token = await user.generateAuthToken()
+        res.send({user, token})
+    }
+    catch (e) {
+        console.log(e)
+        res.status(400).send(e)
+    }
+})
+
 userRouter.post('/users/logout', auth, async (req, res) => {
     try {
         req.user.tokens = req.user.tokens.filter((token) => {
@@ -49,14 +61,15 @@ userRouter.post('/users/logoutall', auth, async (req, res) => {
     }
 })
 
-userRouter.delete('/users/:id', async (req, res) => {
+userRouter.delete('/users/me', auth, async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id)
-        if (!user) {
-            return res.status(404).send()
-        }
+        // const user = await User.findByIdAndDelete(req.user._id)
+        // if (!user) {
+        //     return res.status(404).send()
+        // }
+        await req.user.remove()
         
-        res.send(user)
+        res.send(req.user)
     }
     catch (e) {
         res.status(500).send({
@@ -65,20 +78,8 @@ userRouter.delete('/users/:id', async (req, res) => {
     }
 })
 
-userRouter.post('/users/login', async (req ,res) => {
-    try {
-        const user = await User.findByEmail(req.body.email, req.body.password)
-        const token = await user.generateAuthToken()
-        res.send({user, token})
-    }
-    catch (e) {
-        console.log(e)
-        res.status(400).send(e)
-    }
-})
 
-
-userRouter.patch('/users/:id', async (req, res) => {
+userRouter.patch('/users/me', auth, async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdate = ['name', 'email', 'password'] 
     const isValidUpdate = updates.every((update) => allowedUpdate.includes(update))
@@ -88,14 +89,9 @@ userRouter.patch('/users/:id', async (req, res) => {
         })
     }
     try {
-        const user = await User.findById(req.params.id)
-        updates.forEach((update) => user[update] = req.body[update])
-        user.save()
-         
-        if (!user) {
-            return res.status(404).send()
-        }
-        res.send(user)
+        updates.forEach((update) => req.user[update] = req.body[update])
+        await req.user.save()
+        res.send(req.user)
     }
     catch (e) {
         res.status(400).send({
