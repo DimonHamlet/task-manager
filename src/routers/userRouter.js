@@ -25,6 +25,30 @@ userRouter.post('/users', async (req, res) => {
     }
 })
 
+userRouter.post('/users/logout', auth, async (req, res) => {
+    try {
+        req.user.tokens = req.user.tokens.filter((token) => {
+            return token.token !== req.token
+        })
+        await req.user.save()
+        res.send()
+    }
+    catch (e) {
+        res.status(500).send()
+    }
+})
+
+userRouter.post('/users/logoutall', auth, async (req, res) => {
+    try {
+        req.user.tokens = []
+        await req.user.save()
+        res.send()
+    }
+    catch (e) {
+        res.status(500).send()
+    }
+})
+
 userRouter.delete('/users/:id', async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id)
