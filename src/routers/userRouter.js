@@ -4,6 +4,7 @@ const User = require('../models/user')
 const auth = require('../middleware/auth')
 const multer = require('multer')
 const sharp = require('sharp')
+const {sendWelcomEmail, sendByeEmail} = require('../emails/accout')
 
 const upload = multer({
     limits: {
@@ -28,6 +29,7 @@ userRouter.post('/users', async (req, res) => {
 
     try {
         await user.save()
+        sendWelcomEmail(user.email, user.name)
         const token = await user.generateAuthToken()
         res.status(201).send({user, token})
     }
@@ -82,7 +84,7 @@ userRouter.delete('/users/me', auth, async (req, res) => {
         //     return res.status(404).send()
         // }
         await req.user.remove()
-        
+        sendByeEmail(req.user.email, req.user.name)
         res.send(req.user)
     }
     catch (e) {
