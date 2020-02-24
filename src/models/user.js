@@ -64,7 +64,7 @@ userSchema.virtual('tasks', {
 userSchema.methods.generateAuthToken = async function() {
     const user = this
 
-    const token = jwt.sign({_id: user.id.toString()}, 'secret', {expiresIn: '1 day'})
+    const token = jwt.sign({_id: user.id.toString()}, process.env.JWT_SECRET, {expiresIn: '1 day'})
 
     user.tokens = user.tokens.concat({token})
     await user.save()
@@ -97,11 +97,10 @@ userSchema.statics.findByEmail = async function (email, password) {
         return user    
 }
 
-const User = mongoose.model('User', userSchema)
+
 // Hashing password before saving
 userSchema.pre('save', async function(next) {
     const user = this
-
     if (user.isModified('password')) {
         user.password = await bcrypt.hash(user.password, 8)
     }
@@ -119,6 +118,7 @@ userSchema.pre('remove', async function(next) {
     next()
 })
 
+const User = mongoose.model('User', userSchema)
 
 
 module.exports = User
