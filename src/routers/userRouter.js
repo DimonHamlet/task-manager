@@ -2,6 +2,19 @@ const express = require('express')
 require('../db/mongoose')
 const User = require('../models/user')
 const auth = require('../middleware/auth')
+const multer = require('multer')
+
+const upload = multer({
+    limits: {
+        fileSize: 2000000
+    },
+    fileFilter(req, file, callback) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            callback(new Error('File must be a picture'))
+        }
+        callback(undefined, true)
+    }
+})
 
 const userRouter = new express.Router()
 
@@ -76,6 +89,29 @@ userRouter.delete('/users/me', auth, async (req, res) => {
             error: e
         })
     }
+})
+
+userRouter.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+    req.user.avatar = req.file.buffer
+    await req.user.save()
+    res.send()
+}, (error, req, res, next) => {
+    res.status(400).send({
+        error: error.message
+    })
+})
+
+userRouter.delete('/users/me/avatar', auth, async (req, res) => {
+    req.user.avatar = undefined
+    try {
+        await req.user.save()
+        res.send()
+    }
+    catch (e) {
+        res.send(400).send({
+            error: e.message
+        })
+    }  
 })
 
 
